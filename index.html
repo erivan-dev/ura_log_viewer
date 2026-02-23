@@ -1,210 +1,397 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Organizador de Logs V9 (Separado)</title>
+    <title>URA Log Viewer V1.10.1</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #494848;
-            --text-color: #ffffff;
-            --accent-color: #007acc;
-            --container-bg: #252526;
-            --border-color: #3e3e42;
-            --table-header: #333333;
-            --table-row-even: #2a2a2a;
-            --table-row-hover: #37373d;
+            --bg: #09090f;
+            --surface: #10101a;
+            --surface2: #161625;
+            --border: #1e1e35;
+            --border2: #2a2a48;
+            --accent: #4f6ef7;
+            --accent2: #7c5cfc;
+            --cyan: #00e5c8;
+            --green: #00d68f;
+            --amber: #f5a623;
+            --red: #ff4d6d;
+            --text: #e8e8f0;
+            --text2: #8888aa;
+            --text3: #4a4a6a;
+            --mono: 'IBM Plex Mono', monospace;
+            --sans: 'Syne', sans-serif;
         }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 13px;
+            min-height: 100vh;
+            padding: 28px 32px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
         }
 
         .container {
-            width: 95%;
-            background-color: var(--container-bg);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        /* ── HEADER ── */
+        .header {
             display: flex;
-            flex-direction: column;
-            min-height: 90vh;
-        }
-        
-
-        h2 {
-                color: #fff;
-                margin-top: 0;
-                margin-bottom: 20px;
-                font-size: 1.8em;
-                border-bottom: 2px solid var(--accent-color);
-                padding-bottom: 10px;
-                text-align: center;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border2);
+            animation: fadeDown 0.4s ease;
         }
 
-        h3 {
-            color: #fff;
-            font-size: 1.8em;
-                border-bottom: 2px solid var(--accent-color);
-                padding-bottom: 10px;
-                text-align: center;
+        .header-left { display: flex; align-items: center; gap: 14px; }
+
+        .logo-badge {
+            width: 42px; height: 42px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border-radius: 11px;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--sans); font-weight: 800; font-size: 13px;
+            letter-spacing: -0.5px;
+            box-shadow: 0 0 28px rgba(79,110,247,0.4);
+            flex-shrink: 0;
+        }
+
+        .header-title {
+            font-family: var(--sans);
+            font-weight: 700; font-size: 19px; letter-spacing: -0.3px;
+        }
+
+        .header-subtitle {
+            color: var(--text2); font-size: 11px; margin-top: 3px; letter-spacing: 0.5px;
+        }
+
+        .version-tag {
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            color: var(--text2);
+            padding: 5px 12px; border-radius: 20px;
+            font-size: 11px; letter-spacing: 0.5px;
+        }
+
+        /* ── TEXTAREA ── */
+        .input-section {
+            margin-bottom: 20px;
+            animation: fadeDown 0.5s ease 0.05s backwards;
+        }
+
+        .input-label {
+            display: flex; align-items: center; gap: 8px;
+            color: var(--text2); font-size: 10px; text-transform: uppercase;
+            letter-spacing: 1.2px; margin-bottom: 8px;
+        }
+
+        .input-label::before {
+            content: ''; width: 6px; height: 6px;
+            background: var(--accent); border-radius: 50%;
         }
 
         textarea {
             width: 100%;
-            height: 120px;
-            background-color: #1e1e1e;
-            color: #9cdcfe;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 10px;
-            font-family: 'Consolas', monospace;
+            height: 130px;
+            background: var(--surface);
+            color: var(--cyan);
+            border: 1px solid var(--border2);
+            border-radius: 10px;
+            padding: 14px 16px;
+            font-family: var(--mono);
+            font-size: 12px;
+            line-height: 1.6;
             white-space: pre;
             overflow-x: auto;
-            box-sizing: border-box;
             resize: vertical;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
+        textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(79,110,247,0.15);
+        }
+
+        /* ── ACTIONS ── */
         .controls {
-            margin: 20px 0;
             display: flex;
             gap: 10px;
-            justify-content: center;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            animation: fadeDown 0.5s ease 0.1s backwards;
         }
 
         button {
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
+            display: flex; align-items: center; gap: 8px;
             padding: 10px 20px;
-            border-radius: 6px;
+            border-radius: 8px; border: none;
             cursor: pointer;
-            font-weight: bold;
+            font-family: var(--mono); font-size: 12px; font-weight: 600;
+            letter-spacing: 0.3px;
+            transition: all 0.2s;
         }
 
-        button:hover {
-            background-color: #005f9e;
+        button.primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            box-shadow: 0 4px 18px rgba(79,110,247,0.35);
+        }
+
+        button.primary:hover {
+            box-shadow: 0 6px 28px rgba(79,110,247,0.55);
+            transform: translateY(-1px);
         }
 
         button.secondary {
-            background-color: #555;
+            background: transparent;
+            border: 1px solid var(--border2);
+            color: var(--text2);
         }
 
         button.secondary:hover {
-            background-color: #666;
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(79,110,247,0.06);
         }
 
-        .table-wrapper {
-            /* Removido flex-grow aqui para permitir múltiplos containers */
-            overflow: auto;
-            border: 1px solid var(--border-color);
-            margin-top: 10px;
-            border-radius: 8px; 
-            background-color: #1e1e1e;
-            flex-shrink: 0; /* Impede que o container único encolha */
-        }
-        
-        #tableContainer {
-            flex-grow: 1; /* Permite que a tabela principal ocupe o espaço restante */
+        /* ── SECTION CARDS ── */
+        .section-card {
+            background: var(--surface);
+            border: 1px solid var(--border2);
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            animation: fadeUp 0.5s ease backwards;
         }
 
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            font-family: 'Consolas', monospace;
+        .section-card:nth-child(1) { animation-delay: 0.1s; }
+        .section-card:nth-child(2) { animation-delay: 0.18s; }
+
+        .section-header {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            background: linear-gradient(90deg, rgba(79,110,247,0.07) 0%, transparent 60%);
+        }
+
+        .section-title {
+            font-family: var(--sans);
+            font-weight: 700; font-size: 14px; letter-spacing: -0.2px;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .section-icon {
+            width: 26px; height: 26px;
+            background: rgba(79,110,247,0.15);
+            border: 1px solid rgba(79,110,247,0.3);
+            border-radius: 7px;
+            display: flex; align-items: center; justify-content: center;
             font-size: 13px;
         }
 
-        th,
-        td {
-            padding: 8px 12px;
+        .section-sub {
+            color: var(--text3); font-size: 11px; font-weight: 400; font-family: var(--mono);
+        }
+
+        .section-badge {
+            background: var(--surface2); border: 1px solid var(--border2);
+            color: var(--text2); padding: 3px 10px;
+            border-radius: 12px; font-size: 10px; letter-spacing: 0.5px;
+        }
+
+        /* ── TABLE WRAPPER ── */
+        .table-wrap {
+            overflow: auto;
+            background: #0c0c16;
+        }
+
+        /* ── SINGLE TABLE ── */
+        #singleValueTableContainer .table-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--mono); font-size: 12px;
+        }
+
+        #singleValueTableContainer .table-wrap th {
+            background: var(--surface2);
+            color: var(--text2);
+            font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px;
+            padding: 10px 18px;
+            border-bottom: 1px solid var(--border2);
             text-align: left;
-            border-bottom: 1px solid var(--border-color);
-            border-right: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        #singleValueTableContainer .table-wrap td {
+            padding: 11px 18px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+
+        #singleValueTableContainer .table-wrap tr:hover td {
+            background: rgba(79,110,247,0.04);
+        }
+
+        #singleValueTableContainer .table-wrap tr:last-child td {
+            border-bottom: none;
+        }
+
+        #singleValueTableContainer .table-wrap td:first-child {
+            color: var(--text2);
+            font-size: 11px; text-transform: capitalize; letter-spacing: 0.3px;
+            width: 32%; min-width: 220px;
+            border-right: 1px solid var(--border);
+        }
+
+        #singleValueTableContainer .table-wrap td:last-child {
+            color: var(--cyan);
+            font-weight: 500;
+        }
+
+        /* ── MULTI TABLE ── */
+        #tableContainer .table-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--mono); font-size: 12px;
+        }
+
+        #tableContainer .table-wrap th {
+            background: var(--surface2);
+            color: var(--text2);
+            font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border2);
+            border-right: 1px solid var(--border);
+            text-align: left; font-weight: 600;
+            position: sticky; top: 0; z-index: 10;
             white-space: nowrap;
         }
 
-        th {
-            background-color: var(--table-header);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            font-weight: bold;
-            color: #fff;
+        #tableContainer .table-wrap td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            white-space: nowrap;
+            color: var(--text);
+            transition: background 0.15s;
         }
 
-        tr:nth-child(even) {
-            background-color: var(--table-row-even);
+        #tableContainer .table-wrap tr:hover td {
+            background: rgba(79,110,247,0.05);
         }
 
-        tr:hover {
-            background-color: var(--table-row-hover);
+        #tableContainer .table-wrap tr:last-child td { border-bottom: none; }
+
+        /* Sticky # column */
+        #tableContainer .table-wrap td:first-child,
+        #tableContainer .table-wrap th:first-child {
+            background: var(--surface2);
+            position: sticky; left: 0; z-index: 11;
+            width: 40px; text-align: center;
+            border-right: 2px solid var(--border2);
+            color: var(--text3); font-weight: 600;
         }
 
-                /* Estilo da Tabela Key-Value (Single Position) */
-        #singleValueTableContainer table {
-            border: none;
-        }
-        #singleValueTableContainer th {
-            background-color: var(--table-header);
-            text-transform: uppercase;
-            font-weight: 600;
-            color: #fff;
-            border-right: none;
-            position: static;
-        }
-        #singleValueTableContainer td {
-            border-right: none;
-        }
-        #singleValueTableContainer td:first-child {
-            background-color: var(--table-header); 
-            font-weight: bold;
-            color: #fff;
-            width: 35%; 
-            min-width: 250px;
-            text-transform: capitalize;
-            position: static; 
+        #tableContainer .table-wrap th:first-child { z-index: 12; }
+
+        #tableContainer .table-wrap tr:hover td:first-child {
+            background: rgba(79,110,247,0.08);
         }
 
-        /* Estilo para a primeira coluna da tabela de multi-posição */
-        #tableContainer td:first-child,
-        #tableContainer th:first-child {
-            background-color: #2d2d2d;
-            position: sticky;
-            left: 0;
-            z-index: 11;
-            font-weight: bold;
-            text-align: center;
-            width: 40px;
-            border-right: 2px solid #555;
+        /* Selected row */
+        #tableContainer .table-wrap tr.selected td {
+            background: rgba(79,110,247,0.12) !important;
         }
 
-        #tableContainer th:first-child {
-            z-index: 12;
+        #tableContainer .table-wrap tr.selected td:first-child {
+            background: rgba(79,110,247,0.2) !important;
+            color: var(--accent);
         }
+
+        /* ── PLACEHOLDER ── */
+        .placeholder {
+            padding: 24px 20px;
+            color: var(--text3);
+            font-size: 12px;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .placeholder::before {
+            content: '◌'; font-size: 18px; color: var(--border2);
+        }
+
+        /* ── FOOTER ── */
+        .footer {
+            margin-top: 32px; padding-top: 18px;
+            border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            color: var(--text3); font-size: 11px;
+            flex-wrap: wrap; gap: 8px;
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
     </style>
 </head>
-
 <body>
+<div class="container">
 
-    <div class="container">
-        
-        <h2>URA Log Viewer V1.10.1 </h2></br>
-        <h5>Versionamento: major.minor.patch</h5></br>
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-left">
+            <div class="logo-badge">URA</div>
+            <div>
+                <div class="header-title">Log Viewer</div>
+                <div class="header-subtitle">Análise de Sessão · Fluxo Sequencial</div>
+            </div>
+        </div>
+        <div class="version-tag">V1.10.1 &nbsp;·&nbsp; major.minor.patch</div>
+    </div>
 
-        <textarea id="inputData" placeholder="Cole o log aqui...">
-cod_identificacao_ligacao	689246577348
+    <!-- INPUT -->
+    <div class="input-section">
+        <div class="input-label">Log de entrada</div>
+        <textarea id="inputData" placeholder="Cole o log aqui...">cod_identificacao_ligacao	689999999999
 data_hora_inicio_ligacao	04/12/2025 10:47:29
 event_name_1	inicio_menu|validacao_parametro|origem_identificada|saudacao_itau|validacao_parametro|validacao|inicio_menu|validacao_dma_habilitado|opm_dma_ddd_habilitado|validacao_origem_chamada|origem_transportes|direcionamento_fluxo|inicio_menu|acionamento_lacuna|mensagem_emergencial|direcionamento_fluxo|validacao|inicio_menu|validacao||
 fluxo_1	Inicio_Ura_Seguros_Assistencias|Modulo_Dial_My_App|Inicio_Ura_Seguros_Assistencias|Roteador_Unico_Lacunas|Inicio_Ura_Seguros_Assistencias|Inicio_Identificacao_Publico||
@@ -221,305 +408,261 @@ tentativa_1	||||||||||||||||||||
 timestamp_1	04/12/2025 10:47:31|04/12/2025 10:47:31|04/12/2025 10:47:31|04/12/2025 10:47:31|04/12/2025 10:47:34|04/12/2025 10:47:41|04/12/2025 10:47:41|04/12/2025 10:47:41|04/12/2025 10:47:41|04/12/2025 10:47:41|04/12/2025 10:47:41|04/12/2025 10:47:41|04/12/2025 10:47:41|04/12/2025 10:47:41|04/12/2025 10:47:41|04/12/2025 10:47:41|04/12/2025 10:47:41|04/12/2025 10:47:41|04/12/2025 10:47:41|
 timestamp_2	04/12/2025 10:47:53|
 ultimo_ponto_1	11794
-validacao_1	Itau_Seguros|Chamada_Autorizada|ITAU|Bom_Dia|Outras_Origens|Opm_Dma_Habilitado|Inicio_Ura_Seguros_Assistencias|Habilitado|Habilitado|Origem_Fixo|Identificacao_Publico|Direciona_Roteador_Lacunas|Inicio_Ura_Seguros_Assistencias|Primeiro_Acionamento|Mensagem_Emergencial_Desativada|Roteador_Unico_Lacunas|Outras_Origens|Inicio_Ura_Seguros_Assistencias|Origem_Uras_Relacionamento||
-        </textarea>
-        </br>
-        <div class="controls">
-             &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-            <button onclick="processarTabela()">Gerar Tabela</button>
-             &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-            <button class="secondary" onclick="exportarCSV()">Baixar CSV (Excel)</button>
-             &nbsp; &nbsp; 
-            <button class="secondary" onclick="exportarPDF()">Baixar PDF</button>
-             &nbsp; &nbsp; &nbsp; &nbsp;
-        </div>
-
-        <div class="table-wrapper" id="singleValueTableContainer" style="margin-top: 20px;">
-            <h3 style="color:#fff; margin: 0 0 10px 0;">Variáveis de Posição Única (Metadados)</h3>
-            <div style="padding:10px; color: #888;">As variáveis com apenas uma posição aparecerão aqui...</div>
-        </div>
-
-        <div class="table-wrapper" id="tableContainer">
-            <h3 style="color:#fff; margin: 0 0 10px 0;">Fluxo Sequencial (Multi-Posição)</h3>
-            <div style="padding:20px; color: #888;">A tabela aparecerá aqui...</div>
-        </div>
-        
-        <footer style="margin-top: 30px; padding: 20px 0; text-align: center; border-top: 1px solid var(--border-color); color: #888; font-size: 0.9em;">
-            Copyright © 2026 de Erivan Oliveira. Todos os direitos reservados.
-        </footer>
+validacao_1	Itau_Seguros|Chamada_Autorizada|ITAU|Bom_Dia|Outras_Origens|Opm_Dma_Habilitado|Inicio_Ura_Seguros_Assistencias|Habilitado|Habilitado|Origem_Fixo|Identificacao_Publico|Direciona_Roteador_Lacunas|Inicio_Ura_Seguros_Assistencias|Primeiro_Acionamento|Mensagem_Emergencial_Desativada|Roteador_Unico_Lacunas|Outras_Origens|Inicio_Ura_Seguros_Assistencias|Origem_Uras_Relacionamento||</textarea>
     </div>
 
-    <script>
-        let colunasGlobal = [];
+    <!-- ACTIONS -->
+    <div class="controls">
+        <button class="primary" onclick="processarTabela()">
+            <span>⊞</span> Gerar Tabela
+        </button>
+        <button class="secondary" onclick="exportarCSV()">
+            <span>↓</span> Baixar CSV (Excel)
+        </button>
+        <button class="secondary" onclick="exportarPDF()">
+            <span>↓</span> Baixar PDF
+        </button>
+    </div>
 
-        function processarTabela() {
-            const inputText = document.getElementById('inputData').value;
-            const lines = inputText.split('\n');
-            const grupos = {};
-            const regex = /\s*(\w+?)(?:_(\d+))?\s+(.*)/;
+    <!-- SINGLE POSITION TABLE -->
+    <div class="section-card" id="singleValueTableContainer">
+        <div class="section-header">
+            <div class="section-title">
+                <div class="section-icon">◈</div>
+                Variáveis de Posição Única
+                <span class="section-sub">(Metadados)</span>
+            </div>
+            <div class="section-badge" id="singleBadge">—</div>
+        </div>
+        <div class="placeholder">As variáveis com apenas uma posição aparecerão aqui...</div>
+    </div>
 
-            lines.forEach(line => {
-                if (!line.trim()) return;
-                const match = line.match(regex);
+    <!-- MULTI POSITION TABLE -->
+    <div class="section-card" id="tableContainer">
+        <div class="section-header">
+            <div class="section-title">
+                <div class="section-icon">⇢</div>
+                Fluxo Sequencial
+                <span class="section-sub">(Multi-Posição)</span>
+            </div>
+            <div class="section-badge" id="multiBadge">—</div>
+        </div>
+        <div class="placeholder">A tabela aparecerá aqui...</div>
+    </div>
 
-                if (match) {
-                    const nomeBase = match[1];
-                    const indice = match[2] ? parseInt(match[2], 10) : 0;
-                    const conteudo = match[3].trim();
+    <div class="footer">
+        <span>⬡ URA Log Viewer · Erivan Oliveira</span>
+        <span>Copyright © 2026. Todos os direitos reservados.</span>
+    </div>
 
-                    if (!grupos[nomeBase]) grupos[nomeBase] = [];
-                    grupos[nomeBase].push({ idx: indice, text: conteudo });
-                }
-            });
+</div>
 
-            const dadosFinais = {};
-            
-            // 1. Processamento e Limpeza (Criação de dadosFinais)
-            for (const [key, items] of Object.entries(grupos)) {
-                items.sort((a, b) => a.idx - b.idx);
-                const textoCompleto = items.map(item => item.text).join('');
-                
-                let arrayDeItens = textoCompleto.split('|').map(v => v.trim());
+<script>
+    let colunasGlobal = [];
 
-                // Remove o último item se for vazio (resultado de um pipe de terminação, ex: "a|b|")
-                if (arrayDeItens.length > 0 && arrayDeItens[arrayDeItens.length - 1] === "") {
-                    arrayDeItens.pop();
-                }
+    function processarTabela() {
+        const inputText = document.getElementById('inputData').value;
+        const lines = inputText.split('\n');
+        const grupos = {};
+        const regex = /\s*(\w+?)(?:_(\d+))?\s+(.*)/;
 
-                dadosFinais[key] = arrayDeItens;
+        lines.forEach(line => {
+            if (!line.trim()) return;
+            const match = line.match(regex);
+            if (match) {
+                const nomeBase = match[1];
+                const indice = match[2] ? parseInt(match[2], 10) : 0;
+                const conteudo = match[3].trim();
+                if (!grupos[nomeBase]) grupos[nomeBase] = [];
+                grupos[nomeBase].push({ idx: indice, text: conteudo });
             }
+        });
 
-
-            // 2. Separação dos Dados em Single e Multi-Posição
-            const dadosMultiPosicao = {};
-            const dadosSinglePosicao = {};
-            let maxItens = 0; // Para a tabela Multi-Posição
-
-            for (const [key, arrayDeItens] of Object.entries(dadosFinais)) {
-                // Considera posição única se o array tiver tamanho 1
-                if (arrayDeItens.length === 1) {
-                    dadosSinglePosicao[key] = arrayDeItens[0];
-                } else if (arrayDeItens.length > 0) {
-                    // Se for 0, ignora (limpeza final do arrayDeItens)
-                    dadosMultiPosicao[key] = arrayDeItens;
-                    if (arrayDeItens.length > maxItens) maxItens = arrayDeItens.length;
-                }
+        const dadosFinais = {};
+        for (const [key, items] of Object.entries(grupos)) {
+            items.sort((a, b) => a.idx - b.idx);
+            const textoCompleto = items.map(item => item.text).join('');
+            let arrayDeItens = textoCompleto.split('|').map(v => v.trim());
+            if (arrayDeItens.length > 0 && arrayDeItens[arrayDeItens.length - 1] === "") {
+                arrayDeItens.pop();
             }
+            dadosFinais[key] = arrayDeItens;
+        }
 
+        const dadosMultiPosicao = {};
+        const dadosSinglePosicao = {};
+        let maxItens = 0;
 
-            // 3. Geração da Tabela de Posição Única (Key-Value)
-            let htmlSingle = '<h3 style="color:#fff; margin: 0 0 10px 0;">Variáveis de Posição Única (Metadados)</h3><table><thead><tr><th>Variável</th><th>Valor</th></tr></thead><tbody>';
-            
-            // Ordena as chaves para melhor visualização
-            Object.keys(dadosSinglePosicao).sort().forEach(key => {
-                const valor = dadosSinglePosicao[key];
-                htmlSingle += `<tr><td>${key}</td><td>${valor}</td></tr>`;
-            });
-            
-            htmlSingle += '</tbody></table>';
-            document.getElementById('singleValueTableContainer').innerHTML = htmlSingle;
+        for (const [key, arrayDeItens] of Object.entries(dadosFinais)) {
+            if (arrayDeItens.length === 1) {
+                dadosSinglePosicao[key] = arrayDeItens[0];
+            } else if (arrayDeItens.length > 0) {
+                dadosMultiPosicao[key] = arrayDeItens;
+                if (arrayDeItens.length > maxItens) maxItens = arrayDeItens.length;
+            }
+        }
 
+        // Single Table
+        const singleKeys = Object.keys(dadosSinglePosicao).sort();
+        let htmlSingle = `
+            <div class="section-header">
+                <div class="section-title">
+                    <div class="section-icon">◈</div>
+                    Variáveis de Posição Única
+                    <span class="section-sub">(Metadados)</span>
+                </div>
+                <div class="section-badge">${singleKeys.length} variáveis</div>
+            </div>
+            <div class="table-wrap"><table><thead><tr><th>Variável</th><th>Valor</th></tr></thead><tbody>`;
+        singleKeys.forEach(key => {
+            htmlSingle += `<tr><td>${key}</td><td>${dadosSinglePosicao[key]}</td></tr>`;
+        });
+        htmlSingle += '</tbody></table></div>';
+        document.getElementById('singleValueTableContainer').innerHTML = htmlSingle;
 
-            // 4. Geração da Tabela Principal (Multi-Posição) com Ordenação Customizada
-            const ordemDesejada = [
-                'event_name', 'validacao', 'fluxo', 'indicador', 
-                'range', 'ponto', 'ultimo_ponto', 'input', 
-                'tentativa', 'ponto_origem', 'timestamp'
-            ];
+        // Multi Table
+        const ordemDesejada = [
+            'event_name', 'validacao', 'fluxo', 'indicador',
+            'range', 'ponto', 'ultimo_ponto', 'input',
+            'tentativa', 'ponto_origem', 'timestamp'
+        ];
 
-            colunasGlobal = Object.keys(dadosMultiPosicao).sort((a, b) => {
-                const indexA = ordemDesejada.indexOf(a);
-                const indexB = ordemDesejada.indexOf(b);
+        colunasGlobal = Object.keys(dadosMultiPosicao).sort((a, b) => {
+            const indexA = ordemDesejada.indexOf(a);
+            const indexB = ordemDesejada.indexOf(b);
+            if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+            if (indexA !== -1) return -1;
+            if (indexB !== -1) return 1;
+            return a.localeCompare(b);
+        });
 
-                // Se ambos estiverem na lista, ordena pela posição na lista
-                if (indexA !== -1 && indexB !== -1) {
-                    return indexA - indexB;
-                }
-                // Se apenas A estiver na lista, A vem primeiro
-                if (indexA !== -1) return -1;
-                // Se apenas B estiver na lista, B vem primeiro
-                if (indexB !== -1) return 1;
-                // Se nenhum estiver na lista, ordena alfabeticamente no final
-                return a.localeCompare(b);
-            });
-
-            let html = '<h3 style="color:#fff; margin: 0 0 10px 0;">Fluxo Sequencial (Multi-Posição)</h3><table><thead><tr><th>#</th>';
+        let htmlMulti = `
+            <div class="section-header">
+                <div class="section-title">
+                    <div class="section-icon">⇢</div>
+                    Fluxo Sequencial
+                    <span class="section-sub">(Multi-Posição)</span>
+                </div>
+                <div class="section-badge">${maxItens} eventos</div>
+            </div>
+            <div class="table-wrap"><table><thead><tr><th>#</th>`;
+        colunasGlobal.forEach(col => {
+            htmlMulti += `<th>${col}</th>`;
+        });
+        htmlMulti += '</tr></thead><tbody>';
+        for (let i = 0; i < maxItens; i++) {
+            htmlMulti += `<tr><td>${i + 1}</td>`;
             colunasGlobal.forEach(col => {
-                html += `<th>${col}</th>`;
+                const valor = dadosMultiPosicao[col][i] !== undefined ? dadosMultiPosicao[col][i] : '';
+                htmlMulti += `<td>${valor}</td>`;
             });
-            html += '</tr></thead><tbody>';
+            htmlMulti += '</tr>';
+        }
+        htmlMulti += '</tbody></table></div>';
+        document.getElementById('tableContainer').innerHTML = htmlMulti;
 
-            for (let i = 0; i < maxItens; i++) {
-                html += `<tr><td>${i + 1}</td>`;
-                colunasGlobal.forEach(col => {
-                    const valor = dadosMultiPosicao[col][i] !== undefined ? dadosMultiPosicao[col][i] : '';
-                    html += `<td>${valor}</td>`;
-                });
-                html += '</tr>';
-            }
-            html += '</tbody></table>';
+        // Row click selection
+        const linhas = document.querySelectorAll("#tableContainer tbody tr");
+        linhas.forEach(linha => {
+            linha.addEventListener("click", () => {
+                linhas.forEach(l => l.classList.remove("selected"));
+                linha.classList.add("selected");
+            });
+        });
+    }
 
-            document.getElementById('tableContainer').innerHTML = html;
-
-            // 5. Adiciona evento de clique nas linhas da tabela principal
-            const linhas = document.querySelectorAll("#tableContainer tbody tr");
-            linhas.forEach(linha => {
-                linha.addEventListener("click", () => {
-                    linhas.forEach(l => l.style.backgroundColor = "");
-                    linha.style.backgroundColor = getComputedStyle(document.documentElement)
-                        .getPropertyValue('--accent-color');
-                });
+    function exportarCSV() {
+        const tableMulti = document.querySelector("#tableContainer table");
+        const tableSingle = document.querySelector("#singleValueTableContainer table");
+        if (!tableMulti && !tableSingle) { alert("Gere a tabela primeiro!"); return; }
+        let csvContent = "";
+        if (tableSingle) {
+            csvContent += "--- METADADOS ---\n";
+            tableSingle.querySelectorAll("tbody tr").forEach(row => {
+                const cells = Array.from(row.querySelectorAll("td")).map(td => `"${td.innerText}"`);
+                csvContent += cells.join(";") + "\n";
+            });
+            csvContent += "\n";
+        }
+        if (tableMulti) {
+            csvContent += "--- FLUXO SEQUENCIAL ---\n";
+            const headers = Array.from(tableMulti.querySelectorAll("th")).map(th => th.innerText);
+            csvContent += headers.join(";") + "\n";
+            tableMulti.querySelectorAll("tbody tr").forEach(row => {
+                const cells = Array.from(row.querySelectorAll("td")).map(td => `"${td.innerText}"`);
+                csvContent += cells.join(";") + "\n";
             });
         }
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.setAttribute("href", URL.createObjectURL(blob));
+        link.setAttribute("download", "analise_log.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 
-        function exportarCSV() {
-            const tableMulti = document.querySelector("#tableContainer table");
-            const tableSingle = document.querySelector("#singleValueTableContainer table");
-            
-            if (!tableMulti && !tableSingle) {
-                alert("Gere a tabela primeiro!");
-                return;
-            }
-            
-            let csvContent = "";
-            
-            // Adiciona a Tabela Single (Key-Value)
-            if (tableSingle) {
-                csvContent += "--- METADADOS ---\n";
-                const rowsSingle = tableSingle.querySelectorAll("tbody tr");
-                rowsSingle.forEach(row => {
-                    const cells = Array.from(row.querySelectorAll("td")).map(td => `"${td.innerText}"`);
-                    csvContent += cells.join(";") + "\n";
-                });
-                csvContent += "\n";
-            }
-            
-            
-            if (tableMulti) {
-                csvContent += "--- FLUXO SEQUENCIAL ---\n";
-                const headers = Array.from(tableMulti.querySelectorAll("th")).map(th => th.innerText);
-                csvContent += headers.join(";") + "\n";
-
-                const rowsMulti = tableMulti.querySelectorAll("tbody tr");
-                rowsMulti.forEach(row => {
-                    const cells = Array.from(row.querySelectorAll("td")).map(td => `"${td.innerText}"`);
-                    csvContent += cells.join(";") + "\n";
-                });
-            }
-
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", "analise_log.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+    function exportarPDF() {
+        const tableMulti = document.querySelector("#tableContainer table");
+        const tableSingle = document.querySelector("#singleValueTableContainer table");
+        if (!tableMulti && !tableSingle) { alert("Gere a tabela primeiro!"); return; }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4');
+        let yPosition = 15;
+        doc.setFontSize(16); doc.setFont(undefined, 'bold');
+        doc.text('Análise de Logs - URA Log Viewer V1.10.1', 15, yPosition);
+        yPosition += 10;
+        if (tableSingle) {
+            doc.setFontSize(12); doc.setFont(undefined, 'bold');
+            doc.text('Variáveis de Posição Única (Metadados)', 15, yPosition);
+            yPosition += 5;
+            const dataSingle = [];
+            tableSingle.querySelectorAll("tbody tr").forEach(row => {
+                dataSingle.push(Array.from(row.querySelectorAll("td")).map(td => td.innerText));
+            });
+            doc.autoTable({
+                startY: yPosition,
+                head: [['Variável', 'Valor']],
+                body: dataSingle,
+                theme: 'grid',
+                headStyles: { fillColor: [79, 110, 247], textColor: 255, fontStyle: 'bold' },
+                styles: { fontSize: 8, cellPadding: 2 },
+                columnStyles: { 0: { cellWidth: 60, fontStyle: 'bold' }, 1: { cellWidth: 'auto' } }
+            });
+            yPosition = doc.lastAutoTable.finalY + 10;
         }
-
-        function exportarPDF() {
-            const tableMulti = document.querySelector("#tableContainer table");
-            const tableSingle = document.querySelector("#singleValueTableContainer table");
-            
-            if (!tableMulti && !tableSingle) {
-                alert("Gere a tabela primeiro!");
-                return;
-            }
-
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4'); // Orientação paisagem
-            
-            let yPosition = 15;
-
-            // Título do documento
-            doc.setFontSize(16);
-            doc.setFont(undefined, 'bold');
-            doc.text('Análise de Logs - Organizador V7', 15, yPosition);
-            yPosition += 10;
-
-            // Tabela de Metadados (Single Position)
-            if (tableSingle) {
-                doc.setFontSize(12);
-                doc.setFont(undefined, 'bold');
-                doc.text('Variáveis de Posição Única (Metadados)', 15, yPosition);
-                yPosition += 5;
-
-                const dataSingle = [];
-                const rowsSingle = tableSingle.querySelectorAll("tbody tr");
-                rowsSingle.forEach(row => {
-                    const cells = Array.from(row.querySelectorAll("td")).map(td => td.innerText);
-                    dataSingle.push(cells);
-                });
-
-                doc.autoTable({
-                    startY: yPosition,
-                    head: [['Variável', 'Valor']],
-                    body: dataSingle,
-                    theme: 'grid',
-                    headStyles: { fillColor: [0, 122, 204], textColor: 255, fontStyle: 'bold' },
-                    styles: { fontSize: 8, cellPadding: 2 },
-                    columnStyles: {
-                        0: { cellWidth: 60, fontStyle: 'bold' },
-                        1: { cellWidth: 'auto' }
-                    }
-                });
-
-                yPosition = doc.lastAutoTable.finalY + 10;
-            }
-
-            // Tabela de Fluxo Sequencial (Multi-Position)
-            if (tableMulti) {
-                // Verifica se precisa de nova página
-                if (yPosition > 180) {
-                    doc.addPage();
-                    yPosition = 15;
-                }
-
-                doc.setFontSize(12);
-                doc.setFont(undefined, 'bold');
-                doc.text('Fluxo Sequencial (Multi-Posição)', 15, yPosition);
-                yPosition += 5;
-
-                const headersMulti = Array.from(tableMulti.querySelectorAll("th")).map(th => th.innerText);
-                const dataMulti = [];
-                const rowsMulti = tableMulti.querySelectorAll("tbody tr");
-                rowsMulti.forEach(row => {
-                    const cells = Array.from(row.querySelectorAll("td")).map(td => td.innerText);
-                    dataMulti.push(cells);
-                });
-
-                doc.autoTable({
-                    startY: yPosition,
-                    head: [headersMulti],
-                    body: dataMulti,
-                    theme: 'grid',
-                    headStyles: { fillColor: [0, 122, 204], textColor: 255, fontStyle: 'bold' },
-                    styles: { fontSize: 7, cellPadding: 1.5, overflow: 'linebreak' },
-                    columnStyles: {
-                        0: { cellWidth: 10, halign: 'center', fontStyle: 'bold' }
-                    },
-                    margin: { left: 10, right: 10 }
-                });
-            }
-
-            // Adiciona rodapé com data/hora
-            const pageCount = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(8);
-                doc.setFont(undefined, 'normal');
-                doc.text(
-                    `Gerado em: ${new Date().toLocaleString('pt-BR')} - Página ${i} de ${pageCount}`,
-                    15,
-                    doc.internal.pageSize.height - 10
-                );
-            }
-
-            doc.save('analise_log.pdf');
+        if (tableMulti) {
+            if (yPosition > 180) { doc.addPage(); yPosition = 15; }
+            doc.setFontSize(12); doc.setFont(undefined, 'bold');
+            doc.text('Fluxo Sequencial (Multi-Posição)', 15, yPosition);
+            yPosition += 5;
+            const headersMulti = Array.from(tableMulti.querySelectorAll("th")).map(th => th.innerText);
+            const dataMulti = [];
+            tableMulti.querySelectorAll("tbody tr").forEach(row => {
+                dataMulti.push(Array.from(row.querySelectorAll("td")).map(td => td.innerText));
+            });
+            doc.autoTable({
+                startY: yPosition,
+                head: [headersMulti],
+                body: dataMulti,
+                theme: 'grid',
+                headStyles: { fillColor: [79, 110, 247], textColor: 255, fontStyle: 'bold' },
+                styles: { fontSize: 7, cellPadding: 1.5, overflow: 'linebreak' },
+                columnStyles: { 0: { cellWidth: 10, halign: 'center', fontStyle: 'bold' } },
+                margin: { left: 10, right: 10 }
+            });
         }
-    </script>
-
-
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8); doc.setFont(undefined, 'normal');
+            doc.text(
+                `Gerado em: ${new Date().toLocaleString('pt-BR')} - Página ${i} de ${pageCount}`,
+                15, doc.internal.pageSize.height - 10
+            );
+        }
+        doc.save('analise_log.pdf');
+    }
+</script>
 </body>
-
 </html>
