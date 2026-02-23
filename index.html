@@ -327,12 +327,16 @@
 
         /* Selected row */
         #tableContainer .table-wrap tr.selected td {
-            background: rgba(79,110,247,0.12) !important;
+            background: rgba(79,110,247,0.35) !important;
+            border-bottom-color: var(--accent) !important;
+            border-top: 1px solid rgba(79,110,247,0.6) !important;
+            color: #fff !important;
         }
 
         #tableContainer .table-wrap tr.selected td:first-child {
-            background: rgba(79,110,247,0.2) !important;
-            color: var(--accent);
+            background: var(--accent) !important;
+            color: #fff !important;
+            font-weight: 700;
         }
 
         /* ── PLACEHOLDER ── */
@@ -385,13 +389,13 @@
                 <div class="header-subtitle">Análise de Sessão · Fluxo Sequencial</div>
             </div>
         </div>
-        <div class="version-tag">V1.10.1 &nbsp;·&nbsp; major.minor.patch</div>
+        <div class="version-tag">V1.10.3 &nbsp;·&nbsp; major.minor.patch</div>
     </div>
 
     <!-- INPUT -->
     <div class="input-section">
         <div class="input-label">Log de entrada</div>
-        <textarea id="inputData" placeholder="Cole o log aqui...">cod_identificacao_ligacao	689999999999
+        <textarea id="inputData" placeholder="Cole o log aqui...">cod_identificacao_ligacao	689246577348
 data_hora_inicio_ligacao	04/12/2025 10:47:29
 event_name_1	inicio_menu|validacao_parametro|origem_identificada|saudacao_itau|validacao_parametro|validacao|inicio_menu|validacao_dma_habilitado|opm_dma_ddd_habilitado|validacao_origem_chamada|origem_transportes|direcionamento_fluxo|inicio_menu|acionamento_lacuna|mensagem_emergencial|direcionamento_fluxo|validacao|inicio_menu|validacao||
 fluxo_1	Inicio_Ura_Seguros_Assistencias|Modulo_Dial_My_App|Inicio_Ura_Seguros_Assistencias|Roteador_Unico_Lacunas|Inicio_Ura_Seguros_Assistencias|Inicio_Identificacao_Publico||
